@@ -7,7 +7,7 @@ import contextlib
 import logging
 from datetime import datetime, timedelta
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
+from telegram import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.error import Forbidden, TelegramError
 from telegram.ext import (
@@ -500,9 +500,61 @@ async def _channel_loop(app: Application, config: Config) -> None:
         await asyncio.sleep(config.channel_check_interval_seconds)
 
 
+async def _register_bot_commands(app: Application) -> None:
+    commands_by_lang: dict[str | None, list[tuple[str, str]]] = {
+        None: [
+            ("now", "Статус світла зараз"),
+            ("today", "Графік на сьогодні"),
+            ("tomorrow", "Графік на завтра"),
+            ("incidents", "Термінові перебої/обстріли"),
+            ("queue", "Обрати або змінити чергу"),
+            ("settings", "Налаштування сповіщень"),
+            ("help", "Довідка та команди"),
+            ("start", "Перезапустити бота"),
+        ],
+        "uk": [
+            ("now", "Статус світла зараз"),
+            ("today", "Графік на сьогодні"),
+            ("tomorrow", "Графік на завтра"),
+            ("incidents", "Термінові перебої/обстріли"),
+            ("queue", "Обрати або змінити чергу"),
+            ("settings", "Налаштування сповіщень"),
+            ("help", "Довідка та команди"),
+            ("start", "Перезапустити бота"),
+        ],
+        "ru": [
+            ("now", "Статус света сейчас"),
+            ("today", "График на сегодня"),
+            ("tomorrow", "График на завтра"),
+            ("incidents", "Срочные перебои/обстрелы"),
+            ("queue", "Выбрать или сменить очередь"),
+            ("settings", "Настройки уведомлений"),
+            ("help", "Справка и команды"),
+            ("start", "Перезапустить бота"),
+        ],
+        "en": [
+            ("now", "Current power status"),
+            ("today", "Today's outage schedule"),
+            ("tomorrow", "Tomorrow's outage schedule"),
+            ("incidents", "Recent urgent power reports"),
+            ("queue", "Choose or change queue"),
+            ("settings", "Notification settings"),
+            ("help", "Help & commands"),
+            ("start", "Restart bot"),
+        ],
+    }
+    for lang_code, items in commands_by_lang.items():
+        bot_cmds = [BotCommand(cmd, desc) for cmd, desc in items]
+        try:
+            await app.bot.set_my_commands(bot_cmds, language_code=lang_code)
+        except TelegramError as exc:
+            logger.warning("Failed to set bot commands (lang=%s): %s", lang_code, exc)
+
+
 async def post_init(app: Application) -> None:
     config: Config = app.bot_data["config"]
     fetcher: ScheduleFetcher = app.bot_data["fetcher"]
+    await _register_bot_commands(app)
     await fetcher.refresh()
     await _process_channel_updates(app, seed_only=True)
     app.bot_data["tasks"] = [
