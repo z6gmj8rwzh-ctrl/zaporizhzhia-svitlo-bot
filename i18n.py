@@ -66,13 +66,8 @@ STRINGS: dict[str, dict[str, str]] = {
         "settings_text": (
             "⚙️ <b>Налаштування сповіщень</b>\n\n"
             "• Черга: <b>{q}</b>\n"
-            "• Автопопередження: <b>{status}</b>\n"
-            "• Попереджати за: <b>{lead} хв</b> до відключення\n"
-            "• Повідомляти про включення світла: <b>{restore}</b>\n"
-            "• Повідомляти про зміну графіка: <b>{change}</b>\n"
-            "• Повідомляти про перебої (дрони/аварії): <b>{emergency}</b>\n"
             "• Мова інтерфейсу: <b>{lang_name}</b>\n\n"
-            "Оберіть інтервал, мову або перемкніть параметри нижче:"
+            "Оберіть інтервал, мову або змініть чергу нижче:"
         ),
         "lang_updated": "🌐 Мову змінено на українську.",
         "today_title": "Сьогодні",
@@ -185,13 +180,8 @@ STRINGS: dict[str, dict[str, str]] = {
         "settings_text": (
             "⚙️ <b>Настройки уведомлений</b>\n\n"
             "• Очередь: <b>{q}</b>\n"
-            "• Авто-предупреждения: <b>{status}</b>\n"
-            "• Предупреждать за: <b>{lead} мин</b> до отключения\n"
-            "• Сообщать о включении света: <b>{restore}</b>\n"
-            "• Сообщать об изменении графика: <b>{change}</b>\n"
-            "• Сообщать о перебоях (дроны/аварии): <b>{emergency}</b>\n"
             "• Язык интерфейса: <b>{lang_name}</b>\n\n"
-            "Выберите интервал, язык или переключите параметры ниже:"
+            "Выберите интервал, язык или смените очередь ниже:"
         ),
         "lang_updated": "🌐 Язык изменён на русский.",
         "today_title": "Сегодня",
@@ -304,13 +294,8 @@ STRINGS: dict[str, dict[str, str]] = {
         "settings_text": (
             "⚙️ <b>Notification Settings</b>\n\n"
             "• Queue: <b>{q}</b>\n"
-            "• Auto-alerts: <b>{status}</b>\n"
-            "• Warn before outage: <b>{lead} min</b>\n"
-            "• Notify on power restore: <b>{restore}</b>\n"
-            "• Notify on schedule change: <b>{change}</b>\n"
-            "• Urgent disruption alerts: <b>{emergency}</b>\n"
             "• Language: <b>{lang_name}</b>\n\n"
-            "Choose lead time, language, or toggle options below:"
+            "Choose lead time, language, or change queue below:"
         ),
         "lang_updated": "🌐 Language changed to English.",
         "today_title": "Today",
