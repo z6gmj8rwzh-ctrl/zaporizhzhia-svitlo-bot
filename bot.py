@@ -96,19 +96,11 @@ def build_settings_keyboard(user: UserConfig) -> InlineKeyboardMarkup:
         )
         for code, label in LANG_BUTTONS
     ]
-    restore_label = t(lang, "toggle_restore_on" if user.notify_on_restore else "toggle_restore_off")
-    change_label = t(lang, "toggle_change_on" if user.notify_on_change else "toggle_change_off")
-    emergency_label = t(lang, "toggle_emergency_on" if user.notify_on_emergency else "toggle_emergency_off")
-    pause_label = t(lang, "toggle_pause_resume" if user.paused else "toggle_pause_stop")
 
     return InlineKeyboardMarkup(
         [
             lead_row,
             lang_row,
-            [InlineKeyboardButton(restore_label, callback_data="toggle:notify_on_restore")],
-            [InlineKeyboardButton(change_label, callback_data="toggle:notify_on_change")],
-            [InlineKeyboardButton(emergency_label, callback_data="toggle:notify_on_emergency")],
-            [InlineKeyboardButton(pause_label, callback_data="toggle:paused")],
             [InlineKeyboardButton(t(lang, "btn_change_queue"), callback_data="action:choose_queue")],
         ]
     )
