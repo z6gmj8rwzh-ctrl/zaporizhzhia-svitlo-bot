@@ -403,12 +403,28 @@ async def on_text_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await cmd_settings(update, context)
 
 
+async def _run_alert_pass(app: Application) -> None:
+    fetcher: ScheduleFetcher = app.bot_data["fetcher"]
+    storage: Storage = app.bot_data["storage"]
+    data = fetcher.data
+    if data is None:
+        return
+    now = datetime.now(KYIV_TZ)
+    for user in storage.list_active_users():
+        alerts = evaluate_user_alerts(user, data, now, storage)
+        for alert in alerts:
+            await _send_safe(app, storage, user, alert.text)
+
+
 async def _fetch_loop(app: Application, config: Config) -> None:
     fetcher: ScheduleFetcher = app.bot_data["fetcher"]
     storage: Storage = app.bot_data["storage"]
     while True:
         try:
-            await fetcher.refresh()
+            prev_updated = (fetcher.data or {}).get("lastUpdated")
+            new_data = await fetcher.refresh()
+            if new_data is not None and new_data.get("lastUpdated") != prev_updated:
+                await _run_alert_pass(app)
             cutoff = int((datetime.now(KYIV_TZ) - timedelta(days=3)).timestamp())
             storage.cleanup_old_notifications(cutoff)
         except asyncio.CancelledError:
@@ -435,17 +451,9 @@ async def _send_safe(app: Application, storage: Storage, user: UserConfig, text:
 
 
 async def _alert_loop(app: Application, config: Config) -> None:
-    fetcher: ScheduleFetcher = app.bot_data["fetcher"]
-    storage: Storage = app.bot_data["storage"]
     while True:
         try:
-            data = fetcher.data
-            if data is not None:
-                now = datetime.now(KYIV_TZ)
-                for user in storage.list_active_users():
-                    alerts = evaluate_user_alerts(user, data, now, storage)
-                    for alert in alerts:
-                        await _send_safe(app, storage, user, alert.text)
+            await _run_alert_pass(app)
         except asyncio.CancelledError:
             raise
         except Exception as exc:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -84,20 +85,20 @@ class ScheduleFetcher:
         return None
 
     async def refresh(self) -> dict[str, Any] | None:
-        """Fetch latest schedule from primary (and fallback if needed), returning freshest valid payload."""
-        async with httpx.AsyncClient(headers={"User-Agent": "zaporizhzhia-svitlo-bot/1.0"}) as client:
-            primary = await self._fetch_json(client, self.primary_url)
-            candidates: list[dict[str, Any]] = []
-            if primary is not None:
-                candidates.append(primary)
+        """Fetch latest schedule from primary and fallback in parallel, returning freshest valid payload."""
+        headers = {
+            "User-Agent": "zaporizhzhia-svitlo-bot/1.0",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        }
+        async with httpx.AsyncClient(headers=headers) as client:
+            results = await asyncio.gather(
+                self._fetch_json(client, self.primary_url),
+                self._fetch_json(client, self.fallback_url),
+                return_exceptions=True,
+            )
 
-            today_ts = day_timestamp_for(datetime.now(KYIV_TZ))
-            primary_has_today = primary is not None and today_ts in primary["fact"]["data"]
-            if not primary_has_today:
-                fallback = await self._fetch_json(client, self.fallback_url)
-                if fallback is not None:
-                    candidates.append(fallback)
-
+        candidates = [r for r in results if isinstance(r, dict)]
         if not candidates:
             return self._data
 
