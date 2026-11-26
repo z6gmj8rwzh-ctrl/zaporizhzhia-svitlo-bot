@@ -16,6 +16,7 @@ from config import KYIV_TZ
 from notifier import evaluate_user_alerts, seed_user_snapshots
 from schedule import (
     collect_timeline_intervals,
+    compute_schedule_diff,
     format_day_schedule,
     format_now_status,
     normalize_queue,
@@ -87,12 +88,15 @@ class ScheduleTests(unittest.TestCase):
         self.assertEqual(off_intervals[1].end, datetime(2026, 11, 26, 1, 30, tzinfo=KYIV_TZ))
         self.assertEqual(off_intervals[1].duration_minutes, 120)
 
-    def test_format_day_schedule_and_unpublished(self) -> None:
+    def test_format_day_schedule_with_timeline(self) -> None:
         # Default language is Ukrainian
         today_msg = format_day_schedule(self.sample_data, self.today_dt, "GPV1.1", "Сьогодні")
         self.assertIn("05:30 – 07:30", today_msg)
         self.assertIn("23:30 – 24:00", today_msg)
         self.assertIn("2.5 год", today_msg)
+        # Timeline bar should be present
+        self.assertIn("🟢", today_msg)
+        self.assertIn("🔴", today_msg)
 
         # English formatting
         today_en = format_day_schedule(self.sample_data, self.today_dt, "GPV1.1", "Today", lang="en")
@@ -103,18 +107,33 @@ class ScheduleTests(unittest.TestCase):
         tomorrow_msg = format_day_schedule(self.sample_data, self.tomorrow_dt, "GPV1.1", "Завтра")
         self.assertIn("ще не опубліковано", tomorrow_msg)
 
-    def test_format_now_status(self) -> None:
+    def test_format_now_status_with_context(self) -> None:
         before_outage = datetime(2026, 11, 25, 5, 15, tzinfo=KYIV_TZ)
         msg_on = format_now_status(self.sample_data, before_outage, "GPV1.1")
         self.assertIn("Світло зараз є", msg_on)
         self.assertIn("05:30 – 07:30", msg_on)
         self.assertIn("через 15 хв", msg_on)
+        # Should include remaining today and timeline
+        self.assertIn("📋", msg_on)
 
         during_outage = datetime(2026, 11, 25, 6, 40, tzinfo=KYIV_TZ)
         msg_off = format_now_status(self.sample_data, during_outage, "GPV1.1", lang="ru")
         self.assertIn("Света сейчас нет", msg_off)
         self.assertIn("07:30", msg_off)
         self.assertIn("через 50 мин", msg_off)
+
+    def test_schedule_diff(self) -> None:
+        import copy
+        old_data = copy.deepcopy(self.sample_data)
+        # Modify: add an outage at hour 15
+        self.sample_data["fact"]["data"][self.today_ts]["GPV1.1"]["15"] = "no"
+        diff = compute_schedule_diff(old_data, self.sample_data, self.today_ts, "GPV1.1")
+        self.assertIsNotNone(diff)
+        self.assertIn("14:00 – 15:00", diff)
+
+        # No diff when data is the same
+        diff_same = compute_schedule_diff(old_data, old_data, self.today_ts, "GPV1.1")
+        self.assertIsNone(diff_same)
 
 
 class NotifierTests(unittest.TestCase):
