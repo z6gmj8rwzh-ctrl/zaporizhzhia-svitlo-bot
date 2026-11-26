@@ -110,19 +110,15 @@ STRINGS: dict[str, dict[str, str]] = {
             "⚠️ Наступне {kind}: {day_prefix}<b>{start} – {end}</b> (через {dur})"
         ),
         "at_word": "о",
-        "remaining_today_label": "📋 Відключення на сьогодні:",
         "alert_tomorrow_published": "📢 <b>Опубліковано графік на завтра!</b>\n\n{body}",
         "alert_schedule_changed": "🔄 <b>Оновився графік відключень!</b>\n\n{body}",
-        "diff_header": "📝 <b>Що змінилося:</b>",
-        "diff_removed_label": "Скасовано відключення:",
-        "diff_added_label": "Додано відключення:",
         "alert_pre_off": (
-            "⚠️ <b>Попередження про відключення світла!</b>\n\n"
+            "⚠️ <b>Попередження про відключення світла!</b>\n"
             "Черга <b>{q}</b>: відключення о <b>{start}</b> (через {mins}).\n"
             "🕒 Орієнтовно до <b>{end}</b> ({dur})."
         ),
         "alert_restore": (
-            "🟢 <b>Час включення світла!</b>\n\n"
+            "🟢 <b>Час включення світла!</b>\n"
             "За графіком для черги <b>{q}</b> електропостачання має відновитися о <b>{time}</b>.{extra}"
         ),
         "alert_restore_next": "\n⚡ Наступне відключення за графіком: {day_prefix}<b>{time}</b>.",
@@ -233,19 +229,15 @@ STRINGS: dict[str, dict[str, str]] = {
             "⚠️ Следующее {kind}: {day_prefix}<b>{start} – {end}</b> (через {dur})"
         ),
         "at_word": "в",
-        "remaining_today_label": "📋 Отключения на сегодня:",
         "alert_tomorrow_published": "📢 <b>Опубликован график на завтра!</b>\n\n{body}",
         "alert_schedule_changed": "🔄 <b>Обновился график отключений!</b>\n\n{body}",
-        "diff_header": "📝 <b>Что изменилось:</b>",
-        "diff_removed_label": "Отменены отключения:",
-        "diff_added_label": "Добавлены отключения:",
         "alert_pre_off": (
-            "⚠️ <b>Предупреждение об отключении света!</b>\n\n"
+            "⚠️ <b>Предупреждение об отключении света!</b>\n"
             "Очередь <b>{q}</b>: отключение в <b>{start}</b> (через {mins}).\n"
             "🕒 Ориентировочно до <b>{end}</b> ({dur})."
         ),
         "alert_restore": (
-            "🟢 <b>Время включения света!</b>\n\n"
+            "🟢 <b>Время включения света!</b>\n"
             "По графику для очереди <b>{q}</b> электроснабжение должно возобновиться в <b>{time}</b>.{extra}"
         ),
         "alert_restore_next": "\n⚡ Следующее отключение по графику: {day_prefix}<b>{time}</b>.",
@@ -356,19 +348,15 @@ STRINGS: dict[str, dict[str, str]] = {
             "⚠️ Next {kind}: {day_prefix}<b>{start} – {end}</b> (in {dur})"
         ),
         "at_word": "at",
-        "remaining_today_label": "📋 Today's outages:",
         "alert_tomorrow_published": "📢 <b>Tomorrow's schedule published!</b>\n\n{body}",
         "alert_schedule_changed": "🔄 <b>Outage schedule updated!</b>\n\n{body}",
-        "diff_header": "📝 <b>What changed:</b>",
-        "diff_removed_label": "Cancelled outages:",
-        "diff_added_label": "Added outages:",
         "alert_pre_off": (
-            "⚠️ <b>Power outage warning!</b>\n\n"
+            "⚠️ <b>Power outage warning!</b>\n"
             "Queue <b>{q}</b>: outage at <b>{start}</b> (in {mins}).\n"
             "🕒 Expected until <b>{end}</b> ({dur})."
         ),
         "alert_restore": (
-            "🟢 <b>Power restore time!</b>\n\n"
+            "🟢 <b>Power restore time!</b>\n"
             "According to schedule for queue <b>{q}</b>, power should return at <b>{time}</b>.{extra}"
         ),
         "alert_restore_next": "\n⚡ Next scheduled outage: {day_prefix}<b>{time}</b>.",

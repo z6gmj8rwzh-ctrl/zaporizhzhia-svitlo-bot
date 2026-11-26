@@ -63,8 +63,8 @@ def load_config(base_dir: Path | None = None) -> Config:
         cache_path=Path(os.environ.get("CACHE_PATH", str(data_dir / "schedule_cache.json"))),
         primary_url=os.environ.get("PRIMARY_DATA_URL", DEFAULT_PRIMARY_URL).strip(),
         fallback_url=os.environ.get("FALLBACK_DATA_URL", DEFAULT_FALLBACK_URL).strip(),
-        fetch_interval_seconds=max(30, int(os.environ.get("FETCH_INTERVAL_SECONDS", "45"))),
-        alert_tick_seconds=max(10, int(os.environ.get("ALERT_TICK_SECONDS", "15"))),
-        channel_check_interval_seconds=max(30, int(os.environ.get("CHANNEL_CHECK_INTERVAL_SECONDS", "45"))),
+        fetch_interval_seconds=max(30, int(os.environ.get("FETCH_INTERVAL_SECONDS", "120"))),
+        alert_tick_seconds=max(10, int(os.environ.get("ALERT_TICK_SECONDS", "30"))),
+        channel_check_interval_seconds=max(30, int(os.environ.get("CHANNEL_CHECK_INTERVAL_SECONDS", "60"))),
         log_level=os.environ.get("LOG_LEVEL", "INFO").upper(),
     )

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -11,13 +10,11 @@ from config import KYIV_TZ
 from i18n import t
 from schedule import (
     collect_timeline_intervals,
-    compute_schedule_diff,
     day_timestamp_for,
     format_day_schedule,
     format_duration,
     format_queue,
     schedule_signature,
-    _format_remaining_today,
 )
 from storage import Storage, UserConfig
 
@@ -40,41 +37,11 @@ def seed_user_snapshots(storage: Storage, data: dict[str, Any] | None, chat_id: 
             storage.set_snapshot(chat_id, day_ts, queue, sig)
 
 
-def _build_schedule_change_message(
-    data: dict[str, Any],
-    day_dt: datetime,
-    queue: str,
-    label: str,
-    lang: str,
-    is_new_day: bool = False,
-    old_data: dict[str, Any] | None = None,
-) -> str:
-    """Build a cohesive schedule change/publish notification message."""
-    day_ts = str(int(day_dt.timestamp()))
-    body = format_day_schedule(data, day_dt, queue, label, lang=lang)
-
-    # Try to compute diff if we have old data
-    diff_text = None
-    if old_data and not is_new_day:
-        diff_text = compute_schedule_diff(old_data, data, day_ts, queue, lang)
-
-    if is_new_day:
-        msg = t(lang, "alert_tomorrow_published", body=body)
-    else:
-        msg = t(lang, "alert_schedule_changed", body=body)
-
-    if diff_text:
-        msg += "\n\n" + t(lang, "diff_header") + "\n" + diff_text
-
-    return msg
-
-
 def evaluate_user_alerts(
     user: UserConfig,
     data: dict[str, Any],
     now: datetime,
     storage: Storage,
-    old_data: dict[str, Any] | None = None,
 ) -> list[PendingAlert]:
     """Compute all pending Telegram messages for a single active user and persist dedup state."""
     if not user.queue or user.paused:
@@ -105,14 +72,24 @@ def evaluate_user_alerts(
         if prev is None:
             # First time seeing this day: notify if tomorrow just appeared and user already tracked today
             if day_ts == tomorrow_ts and storage.get_snapshot(user.chat_id, today_ts) is not None and user.notify_on_change:
-                msg = _build_schedule_change_message(data, day_dt, queue, label, lang, is_new_day=True)
-                alerts.append(PendingAlert(chat_id=user.chat_id, text=msg))
+                body = format_day_schedule(data, day_dt, queue, label, lang=lang)
+                alerts.append(
+                    PendingAlert(
+                        chat_id=user.chat_id,
+                        text=t(lang, "alert_tomorrow_published", body=body),
+                    )
+                )
             storage.set_snapshot(user.chat_id, day_ts, queue, sig)
         elif prev != (queue, sig):
             storage.set_snapshot(user.chat_id, day_ts, queue, sig)
             if user.notify_on_change:
-                msg = _build_schedule_change_message(data, day_dt, queue, label, lang, is_new_day=False, old_data=old_data)
-                alerts.append(PendingAlert(chat_id=user.chat_id, text=msg))
+                body = format_day_schedule(data, day_dt, queue, label, lang=lang)
+                alerts.append(
+                    PendingAlert(
+                        chat_id=user.chat_id,
+                        text=t(lang, "alert_schedule_changed", body=body),
+                    )
+                )
 
     # 2. Pre-outage and restoration alerts across today + tomorrow
     intervals = collect_timeline_intervals(data, queue, today_dt, days_ahead=2, collapse_outage_types=True)
@@ -129,13 +106,6 @@ def evaluate_user_alerts(
                     end_label = iv.end.strftime("%H:%M")
                     if iv.end.date() > iv.start.date():
                         end_label = iv.end.strftime("%d.%m %H:%M")
-
-                    # Collect remaining outages for extra context
-                    remaining = _format_remaining_today(data, now, queue, lang)
-                    extra_ctx = ""
-                    if remaining:
-                        extra_ctx = "\n\n" + remaining
-
                     alerts.append(
                         PendingAlert(
                             chat_id=user.chat_id,
@@ -147,7 +117,7 @@ def evaluate_user_alerts(
                                 mins=format_duration(mins_left, lang),
                                 end=end_label,
                                 dur=format_duration(iv.duration_minutes, lang),
-                            ) + extra_ctx,
+                            ),
                         )
                     )
                     storage.mark_notified(user.chat_id, event_key, now_ts)
@@ -157,12 +127,11 @@ def evaluate_user_alerts(
             if 0 <= seconds_since_restore <= 300:
                 event_key = f"restore:{int(iv.start.timestamp())}"
                 if not storage.was_notified(user.chat_id, event_key):
-                    next_off = next((n for n in intervals[idx + 1:] if n.state == "off"), None)
+                    next_off = next((n for n in intervals[idx + 1 :] if n.state == "off"), None)
                     extra = ""
                     if next_off:
                         day_prefix = "" if next_off.start.date() == local_now.date() else f"{next_off.start.strftime('%d.%m')} {at_word} "
                         extra = t(lang, "alert_restore_next", day_prefix=day_prefix, time=next_off.start.strftime("%H:%M"))
-
                     alerts.append(
                         PendingAlert(
                             chat_id=user.chat_id,

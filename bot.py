@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import copy
 import logging
 from datetime import datetime, timedelta
 
@@ -417,10 +416,7 @@ async def _fetch_loop(app: Application, config: Config) -> None:
     storage: Storage = app.bot_data["storage"]
     while True:
         try:
-            old_data = copy.deepcopy(fetcher.data) if fetcher.data else None
-            new_data = await fetcher.refresh()
-            # Store old_data for diff comparison in alert loop
-            app.bot_data["prev_data"] = old_data
+            await fetcher.refresh()
             cutoff = int((datetime.now(KYIV_TZ) - timedelta(days=3)).timestamp())
             storage.cleanup_old_notifications(cutoff)
         except asyncio.CancelledError:
@@ -454,9 +450,8 @@ async def _alert_loop(app: Application, config: Config) -> None:
             data = fetcher.data
             if data is not None:
                 now = datetime.now(KYIV_TZ)
-                old_data = app.bot_data.get("prev_data")
                 for user in storage.list_active_users():
-                    alerts = evaluate_user_alerts(user, data, now, storage, old_data=old_data)
+                    alerts = evaluate_user_alerts(user, data, now, storage)
                     for alert in alerts:
                         await _send_safe(app, storage, user, alert.text)
         except asyncio.CancelledError:
@@ -516,7 +511,6 @@ async def _channel_loop(app: Application, config: Config) -> None:
 async def post_init(app: Application) -> None:
     config: Config = app.bot_data["config"]
     fetcher: ScheduleFetcher = app.bot_data["fetcher"]
-    app.bot_data["prev_data"] = None
     await fetcher.refresh()
     await _process_channel_updates(app, seed_only=True)
     app.bot_data["tasks"] = [
